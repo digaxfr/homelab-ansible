@@ -1,0 +1,60 @@
+---
+- block:
+  - name: generate-esxi-iso | tempfile (iso)
+    tempfile:
+      state: directory
+    register: _tempfile_iso
+
+  - name: generate-esxi-iso | tempfile (workspace for new iso)
+    tempfile:
+      state: directory
+    register: _tempfile_workspace
+
+  - name: generate-esxi-iso | mount iso
+    command: >
+      hdiutil mount -mountpoint {{ _tempfile_iso.path }} "{{ vmware_fusion_vm_dir }}/isos/{{ esxi_iso }}"
+
+  - name: generate-esxi-iso | copy files
+    copy:
+      src: '{{ _tempfile_iso.path }}/'
+      dest: '{{ _tempfile_workspace.path }}'
+      mode: preserve
+      remote_src: yes
+
+  - name: generate-esxi-iso | template kickstart file
+    template:
+      src: ks.cfg.j2
+      dest: '{{ _tempfile_workspace.path }}/KS.CFG'
+      mode: 0640
+
+  - name: generate-esxi-iso | update boot.cfg
+    lineinfile:
+      path: '{{ _tempfile_workspace.path }}{{ item }}'
+      regexp: kernelopt=*
+      line: kernelopt=cdromBoot runweasel ks=cdrom:/KS.CFG
+    with_items:
+    - /BOOT.CFG
+    - /EFI/BOOT/BOOT.CFG
+
+  - name: generate-esxi-iso | generate esxi iso
+    command: >
+      "{{ vmware_fusion_bin_dir }}/mkisofs" -relaxed-filenames -J -R
+      -o "{{ vmware_fusion_vm_dir }}/isos/{{ esxi_custom_iso }}"
+      -b ISOLINUX.BIN -c BOOT.CAT -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot
+      -eltorito-platform efi -b EFIBOOT.IMG -no-emul-boot {{ _tempfile_workspace.path }}
+    args:
+      chdir: '{{ _tempfile_workspace.path }}'
+
+  always:
+  - name: generate-esxi-iso | umount iso
+    command: >
+      hdiutil unmount {{ _tempfile_iso.path }}
+    ignore_errors: yes
+
+  - name: generate-esxi-iso | cleanup temp dirs
+    file:
+      name: '{{ item }}'
+      state: absent
+    with_items:
+    - '{{ _tempfile_iso.path }}'
+    - '{{ _tempfile_workspace.path }}'

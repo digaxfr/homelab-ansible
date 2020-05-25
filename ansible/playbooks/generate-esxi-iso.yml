@@ -1,0 +1,7 @@
+---
+- hosts: vmware_fusion_host
+  connection: local
+  become: no
+  gather_facts: no
+  roles:
+  - generate-esxi-iso

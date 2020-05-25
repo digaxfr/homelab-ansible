@@ -1,0 +1,8 @@
+# https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.esxi.install.doc/GUID-C03EADEA-A192-4AB4-9B71-9256A9CB1F9C.html
+# https://docs.vmware.com/en/VMware-vSphere/7.0/com.vmware.esxi.install.doc/GUID-61A14EBB-5CF3-43EE-87EF-DB8EC6D83698.html
+vmaccepteula
+clearpart --alldrives --overwritevmfs
+install --firstdisk=local --overwritevmfs
+network --bootproto=dhcp --device=vmnic0
+reboot
+rootpw {{ esxi_root_password }}

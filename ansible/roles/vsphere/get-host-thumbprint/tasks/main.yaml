@@ -1,0 +1,9 @@
+---
+- name: vsphere/get-host-thumnprint | include
+  include: thumbprint.yaml
+  delegate_to: '{{ groups.esxi_tools | random }}'
+
+- name: vsphere/get-host-thumbprint | ensure thumbprint fact is set
+  local_action:
+    module: debug
+    var: vi_thumbprint

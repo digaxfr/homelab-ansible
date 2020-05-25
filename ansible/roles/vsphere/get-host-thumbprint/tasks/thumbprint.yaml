@@ -1,0 +1,15 @@
+---
+- name: vsphere/get-host-thumbprint | run esxcli to get the thumbprint
+  command: esxcli
+  register: _esxcli
+  environment:
+    VI_SERVER: '{{ inventory_hostname }}'
+    VI_USERNAME: root
+    VI_PASSWORD: '{{ esxi_root_password }}'
+    VI_THUMBPRINT: ''
+  no_log: yes
+  failed_when: _esxcli.rc != 1
+
+- name: vsphere/get-host-thumbprint | set thumbprint fact
+  set_fact:
+    vi_thumbprint: '{{ _esxcli.stdout.split(" ")[5] }}'

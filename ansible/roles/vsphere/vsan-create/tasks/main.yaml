@@ -1,0 +1,25 @@
+---
+- name: vsphere/vsan-create | check if we are joined to a vsan cluster already or not
+  command: esxcli vsan cluster get
+  environment:
+    VI_PASSWORD: '{{ esxi_root_password }}'
+    VI_SERVER: '{{ inventory_hostname }}'
+    VI_THUMBPRINT: '{{ vi_thumbprint }}'
+    VI_USERNAME: root
+  register: _vsan_get
+  ignore_errors: yes
+  delegate_to: '{{ groups.esxi_tools | random }}'
+  no_log: yes
+
+- name: vsphere/vsan-create | create the initial cluster
+  command: esxcli {{ item }}
+  environment:
+    VI_PASSWORD: '{{ esxi_root_password }}'
+    VI_SERVER: '{{ inventory_hostname }}'
+    VI_THUMBPRINT: '{{ vi_thumbprint }}'
+    VI_USERNAME: root
+  with_items:
+  - vsan cluster new
+  when: '"vSAN Clustering is not enabled on this host" == _vsan_get.stdout'
+  delegate_to: '{{ groups.esxi_tools | random }}'
+  no_log: yes

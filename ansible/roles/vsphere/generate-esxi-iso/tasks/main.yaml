@@ -1,0 +1,9 @@
+---
+- name: generate-esxi-iso | stat iso image
+  stat:
+    path: '{{ vmware_fusion_vm_dir }}/isos/{{ esxi_custom_iso }}'
+  register: _stat
+
+- name: generate-esxi-iso | generate
+  include: generate.yaml
+  when: 'not _stat.stat.exists'

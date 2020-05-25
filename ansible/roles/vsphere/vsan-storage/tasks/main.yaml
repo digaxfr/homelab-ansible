@@ -1,0 +1,14 @@
+---
+- name: vsphere/vsan-bootstrap | tag flash storage and add it to the cluster
+  command: esxcli {{ item }}
+  environment:
+    VI_PASSWORD: '{{ esxi_root_password }}'
+    VI_SERVER: '{{ inventory_hostname }}'
+    VI_THUMBPRINT: '{{ vi_thumbprint }}'
+    VI_USERNAME: root
+  with_items:
+  - vsan storage tag add -d mpx.vmhba0:C0:T2:L0 -t capacityFlash
+  - vsan storage add -s mpx.vmhba0:C0:T1:L0 -d mpx.vmhba0:C0:T2:L0
+#  - vsan storage faultdomain set -n 
+  delegate_to: '{{ groups.esxi_tools | random }}'
+  no_log: yes

@@ -1,0 +1,13 @@
+# For OCD purposes, list all inventory here at the top, ungrouped. If there are 'ansible_' vars to define, do it here.
+
+# Home based devices
+rock64-01.home.dchin.dev ansible_ssh_host=192.168.188.88 ansible_user=digaxfr
+
+# Lab based devices
+macfail-fedora.lab.dchin.dev
+
+[pihole]
+rock64-01.lab.dchin.dev
+
+[wireguard]
+rock64-01.lab.dchin.dev
