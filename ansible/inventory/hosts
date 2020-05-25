@@ -4,9 +4,14 @@
 rock64-01.home.dchin.dev ansible_ssh_host=192.168.188.88 ansible_user=digaxfr
 
 # Lab based devices
+macfail-fedora.lab.dchin.dev ansible_user=fedora
+
+# Host groups
+[container_hosts]
 macfail-fedora.lab.dchin.dev
 
 [pihole]
+macfail-fedora.lab.dchin.dev
 rock64-01.lab.dchin.dev
 
 [wireguard]

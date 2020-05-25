@@ -1,0 +1,6 @@
+---
+- hosts: container_hosts
+  become: yes
+  gather_facts: yes
+  roles:
+  - container-runtime
