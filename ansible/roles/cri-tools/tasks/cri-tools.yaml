@@ -1,0 +1,24 @@
+---
+- block:
+  - name: cri-tools | tempdir
+    tempfile:
+      state: directory
+    register: _cri_tools_tempfile
+
+  - name: cri-tools | get tarball
+    get_url:
+      url: '{{ cri_tools_pkg_url }}'
+      dest: '{{ _cri_tools_tempfile.path }}/'
+    register: _cri_tools_get_url
+
+  - name: cri-tools | unarchive
+    unarchive:
+      src: '{{ _cri_tools_get_url.dest }}'
+      dest: /usr/local/bin/
+      remote_src: yes
+
+  always:
+  - name: cri-tools | cleanup
+    file:
+      path: '{{ _cri_tools_tempfile.path }}'
+      state: absent

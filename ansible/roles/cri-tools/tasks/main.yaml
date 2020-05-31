@@ -1,0 +1,9 @@
+---
+- name: cri-tools | check for cri-tools binary
+  stat:
+    path: /usr/local/bin/crictl
+  register: _cri_tools_stat
+
+- name: cri-tools | include cri-tools.yaml
+  include: cri-tools.yaml
+  when: not _cri_tools_stat.stat.exists
