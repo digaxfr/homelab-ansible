@@ -1,0 +1,41 @@
+---
+- block:
+  - name: containerd | tempdir
+    tempfile:
+      state: directory
+    register: _containerd_tempfile
+
+  - name: containerd | get tarball
+    get_url:
+      url: '{{ containerd_pkg_url }}'
+      dest: '{{ _containerd_tempfile.path }}/'
+    register: _containerd_get_url
+
+  # Package root dir is 'bin'
+  - name: containerd | unarchive
+    unarchive:
+      src: '{{ _containerd_get_url.dest }}'
+      dest: /usr/local
+      remote_src: yes
+
+  - name: containerd | template out systemd file
+    template:
+      src: containerd.service.j2
+      dest: /etc/systemd/system/containerd.service
+      owner: root
+      group: root
+      mode: 0644
+    notify: restart containerd
+
+  - name: containerd | systemd
+    systemd:
+      name: containerd
+      state: started
+      enabled: yes
+      daemon_reload: yes
+
+  always:
+  - name: containerd | cleanup
+    file:
+      path: '{{ _containerd_tempfile.path }}'
+      state: absent

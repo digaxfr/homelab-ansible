@@ -1,4 +1,0 @@
----
-- name: container-runtime | install podman
-  include: podman.yaml
-  when: 'ansible_distribution == "Fedora"'

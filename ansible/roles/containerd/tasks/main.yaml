@@ -1,0 +1,9 @@
+---
+- name: containerd | check for containerd binary
+  stat:
+    path: /usr/local/bin/containerd
+  register: _containerd_stat
+
+- name: containerd | include containerd.yaml
+  include: containerd.yaml
+  when: not _containerd_stat.stat.exists
