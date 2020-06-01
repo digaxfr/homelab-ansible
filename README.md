@@ -7,8 +7,6 @@ Wireguard, etc.
 
 First pass is done. A lot left to do:
 
-* Calico is actually still broken
-* Fix the manual changes I did in dnsmasq (extra records added)
 * Write defensive health checks
 * Simulate day-2 operations/workflows
 * Provide my own CA and certs for kube-apiserver
