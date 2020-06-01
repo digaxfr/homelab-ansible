@@ -18,22 +18,6 @@
       dest: /usr/local
       remote_src: yes
 
-  - name: containerd | template out systemd file
-    template:
-      src: containerd.service.j2
-      dest: /etc/systemd/system/containerd.service
-      owner: root
-      group: root
-      mode: 0644
-    notify: restart containerd
-
-  - name: containerd | systemd
-    systemd:
-      name: containerd
-      state: started
-      enabled: yes
-      daemon_reload: yes
-
   always:
   - name: containerd | cleanup
     file:
