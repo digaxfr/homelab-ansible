@@ -26,7 +26,7 @@
   command:
     /sbin/modprobe br_netfilter
 
-- name: iptables | let iptables see bridged traffic (k8s)
+- name: iptables | kubernetes sysctls
   sysctl:
     name: '{{ item.name }}'
     value: '{{ item.value }}'
@@ -35,6 +35,8 @@
   - name: net.bridge.bridge-nf-call-ip6tables
     value: 1
   - name: net.bridge.bridge-nf-call-iptables
+    value: 1
+  - name: net.ipv4.ip_forward
     value: 1
   when: '"k8s_cluster" in group_names'
 
