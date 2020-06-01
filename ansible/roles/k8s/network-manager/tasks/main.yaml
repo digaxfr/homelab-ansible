@@ -1,0 +1,9 @@
+---
+- name: k8s/network-manager | prevent NetworkManager from mucking with Calico
+  template:
+    src: calico.conf.j2
+    dest: /etc/NetworkManager/conf.d/calico.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart NetworkManager

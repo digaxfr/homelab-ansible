@@ -19,6 +19,10 @@
     tags:
     - prereqs
     - k8s-prereqs
+  - role: k8s/network-manager
+    tags:
+    - prereqs
+    - k8s-network-manager
 
 - hosts: masters[0]
   become: yes

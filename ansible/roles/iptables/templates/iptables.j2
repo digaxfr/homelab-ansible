@@ -19,6 +19,7 @@
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 30000:32767 -j ACCEPT
 {% endif %}
 {% if 'k8s_cluster' in group_names %}
+-A INPUT -p tcp -m state --state NEW -m tcp --dport 179 -j ACCEPT
 -A INPUT -p tcp -m state --state NEW -m tcp --dport 10250 -j ACCEPT
 {% endif %}
 -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT
