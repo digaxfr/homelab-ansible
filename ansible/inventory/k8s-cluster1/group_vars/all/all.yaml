@@ -1,0 +1,9 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+ansible_user: centos
+
+k8s_pod_cidr: 100.64.0.0/24
+k8s_service_cidr: 100.64.1.0/24
+
+k8s_api_endpoint_name: k8s-apia.lab.dchin.dev
+k8s_api_endpoint_port: 6443
