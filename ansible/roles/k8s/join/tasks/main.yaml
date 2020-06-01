@@ -1,0 +1,9 @@
+---
+- name: k8s/join | check if kubelet.conf exists
+  stat:
+    path: /etc/kubernetes/kubelet.conf
+  register: _k8s_join_kubelet_conf
+
+- name: k8s/join | include add-master
+  include: join.yaml
+  when: 'not _k8s_join_kubelet_conf.stat.exists'

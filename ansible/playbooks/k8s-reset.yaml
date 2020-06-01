@@ -1,0 +1,30 @@
+---
+- hosts: k8s_cluster
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: k8s-reset | reset
+    command: >
+      kubeadm reset -f
+
+  - name: k8s-reset | bounce iptables
+    systemd:
+      name: iptables
+      state: restarted
+
+  - name: k8s-reset | get rid of cni
+    file:
+      path: '{{ item }}'
+      state: absent
+    with_items:
+    - /etc/kubernetes
+    - /etc/cni
+
+- hosts: etcd
+  become: yes
+  gather_facts: no
+  tasks:
+  - name: k8s-reset | get rid of etcd dir
+    file:
+      path: /var/lib/etcd
+      state: absent

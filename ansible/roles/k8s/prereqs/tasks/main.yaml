@@ -1,0 +1,23 @@
+---
+- name: k8s/prereqs | set up the yum repo
+  template:
+    src: kubernetes.repo.j2
+    dest: /etc/yum.repos.d/kubernetes.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: k8s/prereqs | install packages
+  yum:
+    name:
+    - kubelet
+    - kubeadm
+    - kubectl
+    disable_excludes: all
+    state: present
+
+- name: k8s/prereqs | enable and start kubelet
+  systemd:
+    name: kubelet
+    state: started
+    enabled: yes

@@ -1,0 +1,17 @@
+---
+- name: k8s/copy-admin/comnf | create kube dir
+  file:
+    path: /root/.kube
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: k8s/copy-admin-conf | copy admin.conf to root's homedir
+  copy:
+    dest: /root/.kube/config
+    src: /etc/kubernetes/admin.conf
+    remote_src: yes
+    owner: root
+    group: root
+    mode: 0600

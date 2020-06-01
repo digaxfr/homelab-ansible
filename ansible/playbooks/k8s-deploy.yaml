@@ -1,0 +1,55 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  roles:
+  - role: iptables
+    tags:
+    - prereqs
+    - firewall
+  - role: containerd
+    tags:
+    - prereqs
+    - containerd
+  - role: cri-tools
+    tags:
+    - prereqs
+    - cri-tools
+  - role: k8s/prereqs
+    tags:
+    - prereqs
+    - k8s-prereqs
+
+- hosts: masters[0]
+  become: yes
+  gather_facts: yes
+  roles:
+  - role: k8s/init
+    tags:
+    - k8s-init
+
+- hosts: masters[1:]
+  become: yes
+  gather_facts: yes
+  serial: 1
+  roles:
+  - role: k8s/join
+    tags:
+    - k8s-join
+
+- hosts: nodes
+  become: yes
+  gather_facts: yes
+  serial: 1
+  roles:
+  - role: k8s/join
+    tags:
+    - k8s-join
+
+- hosts: masters[0]
+  become: yes
+  gather_facts: no
+  roles:
+  - role: k8s/calico
+    tags:
+    - k8s-calico

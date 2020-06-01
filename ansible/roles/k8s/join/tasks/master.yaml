@@ -1,0 +1,35 @@
+---
+- name: k8s/join | cat files from working master
+  command: >
+    cat /etc/kubernetes/pki/{{ item }}
+  with_items:
+  - ca.crt
+  - ca.key
+  - etcd/ca.crt
+  - etcd/ca.key
+  - front-proxy-ca.crt
+  - front-proxy-ca.key
+  - sa.key
+  - sa.pub
+  register: _k8s_join_cat_files
+  delegate_to: '{{ groups.masters[0] }}'
+  no_log: yes
+
+- name: k8s/join | create dir
+  file:
+    path: '{{ item }}'
+    state: directory
+  with_items:
+  - /etc/kubernetes
+  - /etc/kubernetes/pki
+  - /etc/kubernetes/pki/etcd
+
+- name: k8s/join | place files onto new master
+  copy:
+    content: '{{ item.stdout }}'
+    dest: '/etc/kubernetes/pki/{{ item.item }}'
+    owner: root
+    group: root
+    mode: 0640
+  with_items: '{{ _k8s_join_cat_files.results }}'
+  no_log: yes

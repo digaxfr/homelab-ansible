@@ -1,0 +1,10 @@
+---
+# Ghetto check to see if we are in a clean slate
+- name: k8s/init | check to see if admin.conf exists
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: _k8s_init_admin_conf
+
+- name: k8s/init | include init
+  include: init.yaml
+  when: 'not _k8s_init_admin_conf.stat.exists'

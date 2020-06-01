@@ -1,0 +1,44 @@
+---
+- block:
+  - name: k8s/join | get bootstrap token
+    command: >
+      kubeadm token create
+    delegate_to: '{{ groups.masters[0] }}'
+    register: _k8s_join_token
+    no_log: yes
+
+  - name: k8s/join | get ca cert hash
+    shell: >
+      openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+    delegate_to: '{{ groups.masters[0] }}'
+    register: _k8s_join_ca_cert_hash
+
+  - name: k8s/join | copy some files over if master
+    include: master.yaml
+    when: '"masters" in group_names'
+
+  - name: k8s/join | join
+    command: >
+      kubeadm join {{ k8s_api_endpoint_name }}:{{ k8s_api_endpoint_port }} --token {{ _k8s_join_token.stdout }}
+      --discovery-token-ca-cert-hash sha256:{{ _k8s_join_ca_cert_hash.stdout }}
+      {% if 'masters' in group_names %}
+      --control-plane
+      {% endif %}
+
+  - name: k8s/join | copy admin.conf if master
+    include_role:
+      name: k8s/copy-admin-conf
+    when: '"masters" in group_names'
+
+  - name: k8s/join | apply node label because kubeadm doesn't do it for worker nodes
+    command: >
+      kubectl label node {{ inventory_hostname }} node-role.kubernetes.io/node=
+    when: '"nodes" in group_names'
+    delegate_to: '{{ groups.masters[0] }}'
+
+  always:
+  - name: k8s/join | delete bootstrap token
+    command: >
+      kubeadm token delete {{ _k8s_join_token.stdout }}
+    delegate_to: '{{ groups.masters[0] }}'
+    no_log: yes

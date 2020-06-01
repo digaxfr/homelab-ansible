@@ -1,0 +1,22 @@
+---
+- block:
+  - name: k8s/init | tempfile
+    tempfile:
+      state: directory
+    register: _k8s_init_tempfile
+
+  - name: k8s/init | template kubeadm config
+    template:
+      src: kubeadm.conf.j2
+      dest: '{{ _k8s_init_tempfile.path }}/kubeadm.conf'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: k8s/init | init the cluster
+    command: >
+      kubeadm init --skip-token-print --config {{ _k8s_init_tempfile.path }}/kubeadm.conf
+
+  - name: k8s/init | copy admin.conf
+    include_role:
+      name: k8s/copy-admin-conf

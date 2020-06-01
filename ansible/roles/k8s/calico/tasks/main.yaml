@@ -1,0 +1,26 @@
+---
+- block:
+  - name: k8s/calico | tempfile
+    tempfile:
+      state: directory
+    register: _k8s_calico_tempfile
+
+  - name: k8s/calico | template yaml
+    template:
+      src: calico.yaml.j2
+      dest: '{{ _k8s_calico_tempfile.path }}/calico.yaml'
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: k8s/calico | apply
+    command: >
+      kubectl apply -f {{ _k8s_calico_tempfile.path }}/calico.yaml
+
+# TODO: Add in health checks
+
+  always:
+  - name: k8s/calico | cleanup
+    file:
+      path: '{{ _k8s_calico_tempfile.path }}'
+      state: absent
