@@ -1,0 +1,14 @@
+[Unit]
+Description=pihole dns
+After=network.target
+
+[Service]
+Type=simple
+TimeoutStartSec=5m
+ExecStart=/usr/bin/podman start -a pihole
+ExecStop=-/usr/bin/podman stop pihole
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+---
+- name: restart pihole
+  systemd:
+    name: pihole
+    state: restarted
