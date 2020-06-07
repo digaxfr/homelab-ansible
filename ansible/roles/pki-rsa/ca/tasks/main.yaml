@@ -1,0 +1,34 @@
+---
+- name: pki-rsa/ca | create a temp directory
+  tempfile:
+    state: directory
+  register: _pki_tempfile
+
+- name: pki-rsa/ca | template openssl cnf
+  template:
+    src: openssl.cnf.j2
+    dest: '{{ _pki_tempfile.path }}/openssl.cnf'
+    mode: 0640
+
+- name: pki-rsa/ca | create the ca rsa
+  command: >
+    openssl genrsa -out {{ _pki_tempfile.path }}/ca-rsa.key 4096
+  args:
+    chdir: '{{ _pki_tempfile.path }}'
+
+- name: pki-rsa/ca | generate root certificate
+  command: >
+    openssl req -x509 \
+    -new \
+    -nodes \
+    -key ca-rsa.key \
+    -days 30 \
+    -out ca.crt \
+    -subj '/C={{ pki_country }}/ST={{ pki_state }}/L={{ pki_locality }}/O={{ pki_organization }}/CN={{ pki_common_name }}' \
+    -config openssl.cnf
+  args:
+    chdir: '{{ _pki_tempfile.path }}'
+
+- name: pki-rsa/ca | debug
+  debug:
+    msg: Key is generated into {{ _pki_tempfile.path }}

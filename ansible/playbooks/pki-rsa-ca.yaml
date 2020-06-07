@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  become: no
+  connection: local
+  gather_facts: no
+  roles:
+  - role: pki-rsa/ca
+    tags: ca
