@@ -1,0 +1,9 @@
+---
+- hosts: workstation
+  become: yes
+  gather_facts: yes
+  roles:
+  - role: podman
+    tags: container-runtime
+  - role: pihole
+    tags: pihole
