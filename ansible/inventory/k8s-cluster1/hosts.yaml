@@ -1,0 +1,34 @@
+---
+all:
+  children:
+    etcd:
+      hosts:
+        #k8s-etcd1a.lab.dchin.dev:
+        #k8s-etcd2a.lab.dchin.dev:
+        #k8s-etcd3a.lab.dchin.dev:
+        k8s-master1a.lab.dchin.dev:
+        k8s-master2a.lab.dchin.dev:
+        k8s-master3a.lab.dchin.dev:
+    ingress:
+      hosts:
+        k8s-ingress1a.lab.dchin.dev:
+        k8s-ingress2a.lab.dchin.dev:
+        k8s-ingress3a.lab.dchin.dev:
+    masters:
+      hosts:
+        k8s-master1a.lab.dchin.dev:
+        k8s-master2a.lab.dchin.dev:
+        k8s-master3a.lab.dchin.dev:
+    nodes:
+      hosts:
+        k8s-ingress1a.lab.dchin.dev:
+        k8s-ingress2a.lab.dchin.dev:
+        k8s-ingress3a.lab.dchin.dev:
+        k8s-node1a.lab.dchin.dev:
+        k8s-node2a.lab.dchin.dev:
+        k8s-node3a.lab.dchin.dev:
+    k8s_cluster:
+      children:
+        ingress:
+        masters:
+        nodes:

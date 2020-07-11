@@ -7,15 +7,21 @@
 
   - name: k8s/calico | template yaml
     template:
-      src: calico.yaml.j2
-      dest: '{{ _k8s_calico_tempfile.path }}/calico.yaml'
+      src: '{{ item }}.j2'
+      dest: '{{ _k8s_calico_tempfile.path }}/{{ item }}'
       owner: root
       group: root
       mode: 0644
+    loop:
+    - tigera-operator.yaml
+    - custom-resources.yaml
 
   - name: k8s/calico | apply
     command: >
-      kubectl apply -f {{ _k8s_calico_tempfile.path }}/calico.yaml
+      kubectl apply -f {{ _k8s_calico_tempfile.path }}/{{ item }}
+    loop:
+    - tigera-operator.yaml
+    - custom-resources.yaml
 
 # TODO: Add in health checks
 
