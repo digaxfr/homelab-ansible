@@ -1,0 +1,70 @@
+---
+- block:
+  - name: docker | tempdir
+    tempfile:
+      state: directory
+    register: _docker_tempfile
+
+  - name: docker | stat docker dir
+    stat:
+      path: /opt/docker
+    register: _docker_dir_stat
+
+  - name: docker | get tarball
+    get_url:
+      url: '{{ docker_static_package_url }}'
+      dest: '{{ _docker_tempfile.path }}/'
+    register: _docker_get_url
+    when: not _docker_dir_stat.stat.exists
+
+  # Package root dir is 'docker'
+  - name: docker | unarchive
+    unarchive:
+      src: '{{ _docker_get_url.dest }}'
+      dest: /opt
+      remote_src: yes
+    when: not _docker_dir_stat.stat.exists
+
+  - name: docker | generate list of files to symlink
+    find:
+      paths: /opt/docker
+    register: _docker_find
+
+  - name: docker | create symlinks
+    file:
+      src: '{{ item.path }}'
+      dest: '/usr/bin/{{ item.path.split("/")[-1] }}'
+      owner: root
+      group: root
+      state: link
+    loop: '{{ _docker_find.files }}'
+
+  - name: docker | make docker group
+    group:
+      name: docker
+      system: yes
+      state: present
+
+  - name: docker | copy systemd templates
+    template:
+      src: '{{ item }}.j2'
+      dest: '/etc/systemd/system/{{ item }}'
+      owner: root
+      group: root
+      mode: 0644
+    loop:
+    - docker.service
+    - docker.socket
+
+  - name: docker | systemd
+    systemd:
+      name: docker
+      state: started
+      enabled: yes
+      daemon_reload: yes
+
+  always:
+  - name: docker | cleanup
+    file:
+      path: '{{ _docker_tempfile.path }}'
+      state: absent

@@ -7,10 +7,10 @@
     tags:
     - prereqs
     - firewall
-  - role: containerd
+  - role: docker
     tags:
     - prereqs
-    - containerd
+    - docker
   - role: cri-tools
     tags:
     - prereqs
