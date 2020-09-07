@@ -1,0 +1,10 @@
+---
+# WIP / reminder of how things are done. Eventually will get around to actually finishing this playbook.
+- hosts: localhost
+  become: yes
+  connection: local
+  gather_facts: no
+  tasks:
+  - name: Add root CA into macOS keychain
+    command: >
+      sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain /var/folders/xz/xpkpvm0j7b35zyc8xxd8_zvc0000gn/T/ansible.s6va0ew1/ca.crt
