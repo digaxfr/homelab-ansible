@@ -52,9 +52,27 @@
       owner: root
       group: root
       mode: 0644
+    notify: restart docker
     loop:
     - docker.service
     - docker.socket
+
+  - name: docker | ensure /etc/docker directory exists
+    file:
+      path: /etc/docker
+      state: directory
+      owner: root
+      group: root
+      mode: 0755
+
+  - name: docker | copy daemon.json
+    template:
+      src: daemon.json.j2
+      dest: /etc/docker/daemon.json
+      owner: root
+      group: root
+      mode: 0644
+    notify: restart docker
 
   - name: docker | systemd
     systemd:
