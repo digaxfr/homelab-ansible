@@ -11,10 +11,6 @@
     tags:
     - prereqs
     - docker
-  - role: cri-tools
-    tags:
-    - prereqs
-    - cri-tools
   - role: k8s/prereqs
     tags:
     - prereqs
