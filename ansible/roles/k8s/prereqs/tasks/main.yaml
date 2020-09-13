@@ -10,9 +10,10 @@
 - name: k8s/prereqs | install packages
   yum:
     name:
-    - kubelet
+    - cri-tools
     - kubeadm
     - kubectl
+    - kubelet
     disable_excludes: all
     state: present
 

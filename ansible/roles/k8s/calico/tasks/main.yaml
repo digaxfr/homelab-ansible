@@ -22,8 +22,29 @@
     loop:
     - tigera-operator.yaml
     - custom-resources.yaml
+    changed_when: yes
 
-# TODO: Add in health checks
+  - name: k8s/calico | check the operator is up and running
+    include_role:
+      name: k8s/checks/deployment
+    vars:
+      check_label: k8s-app=tigera-operator
+      check_namespace: tigera-operator
+
+  - name: k8s/calico | check tigerastatus calico
+    command: >
+      kubectl get tigerastatus calico \
+      -o 'template={% raw %}{{ range .status.conditions }}
+      {{ if eq .type "Available" }}
+      {{ if eq .status "True" }}true{{ end }}
+      {{ end }}
+      {{ end }}'
+      {% endraw %}
+    register: _calico_tigerastatus_calico
+    until: _calico_tigerastatus_calico.stdout | regex_replace(' ', '') == 'true'
+    retries: 60
+    delay: 2
+    changed_when: no
 
   always:
   - name: k8s/calico | cleanup

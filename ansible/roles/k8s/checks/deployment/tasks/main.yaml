@@ -1,0 +1,19 @@
+---
+- name: check/deployments | asserts
+  assert:
+    that:
+    - check_label is defined
+    - check_namespace is defined
+
+- name: check/deployments | check all replicas are available
+  command: >-
+    kubectl -n {{ check_namespace }} get deployment -l {{ check_label }} \
+    -o 'template={% raw %}{{ range .items }}
+    {{ if eq .status.availableReplicas .status.replicas }}true{{ end }}
+    {{ end }}'
+    {% endraw %}
+  register: _check_kubectl
+  retries: '{{ check_retries | default(60) }}'
+  delay: '{{ check_delay | default(2) }}'
+  until: _check_kubectl.stdout | regex_replace(' ', '') == 'true'
+  changed_when: no
