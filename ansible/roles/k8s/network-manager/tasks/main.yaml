@@ -7,3 +7,6 @@
     group: root
     mode: 0644
   notify: restart NetworkManager
+
+- name: k8s/network-manager | flush handlers
+  meta: flush_handlers
