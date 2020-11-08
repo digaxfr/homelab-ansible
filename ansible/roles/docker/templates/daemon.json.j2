@@ -3,9 +3,11 @@
     "exec-opts": [
         "native.cgroupdriver=systemd"
     ],
+{% if ansible_distribution != 'Debian' %}
     "hosts": [
         "fd://",
         "unix:///var/run/docker.sock"
     ],
+{% endif %}
     "storage-driver": "overlay2"
 }

@@ -1,0 +1,22 @@
+---
+- name: docker | install docker package
+  apt:
+    name: docker.io
+    state: present
+    cache_valid_time: 600
+
+- name: docker | copy daemon.json
+  template:
+    src: daemon.json.j2
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart docker
+
+- name: docker | systemd
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+    daemon_reload: yes
