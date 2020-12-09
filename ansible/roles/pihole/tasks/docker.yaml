@@ -1,0 +1,35 @@
+---
+- name: pihole | figure out if pihole exists or not
+  command: >
+    docker inspect pihole
+  register: _pihole_inspect
+  ignore_errors: yes
+
+- name: pihole | create pihole container
+  command: >
+    docker run -d \
+    --name pihole \
+    -p 53:53/tcp \
+    -p 53:53/udp \
+    -p 80:80/tcp \
+    -p 443:443/tcp \
+    -e TZ="America/New_York" \
+    --dns=127.0.0.1 \
+    --dns=1.1.1.1 \
+    --restart=always \
+    --hostname {{ inventory_hostname }} \
+    -e VIRTUAL_HOST={{ inventory_hostname }} \
+    -e PROXY_LOCATION={{ inventory_hostname }} \
+    -e ServerIP="0.0.0.0" \
+    {{ pihole_image }}
+  when: _pihole_inspect.rc != 0
+
+- name: pihole | ensure the pod is running
+  command: >
+    {% raw %}
+    docker inspect -f '{{.State.Healthcheck.Status}}' pihole
+    {% endraw %}
+  register: _pihole_inspect_status
+  retries: 15
+  delay: 2
+  until: _pihole_inspect_status.stdout == 'healthy'
