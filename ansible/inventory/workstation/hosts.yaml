@@ -1,0 +1,12 @@
+---
+all:
+  hosts:
+    ryzenfail.dchin.dev:
+      ansible_connection: local
+  children:
+    fkmvm_hypervisor:
+      hosts:
+        ryzenfail.dchin.dev:
+    workstation:
+      hosts:
+        ryzenfail.dchin.dev:
