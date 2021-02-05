@@ -1,0 +1,6 @@
+---
+- hosts: fkmvm_hypervisor
+  gather_facts: yes
+  become: yes
+  roles:
+  - firecracker_microvm/install

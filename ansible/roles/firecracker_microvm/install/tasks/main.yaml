@@ -1,0 +1,18 @@
+---
+- name: get the latest version number
+  uri:
+    url: '{{ fkmvm_release_url }}/latest'
+  register: _fkmvm_latest_version_url
+
+- name: set fact for latest version
+  set_fact:
+    _fkmvm_latest_version: '{{ _fkmvm_latest_version_url.url | basename }}'
+
+- name: check if this version exists already
+  stat:
+    path: /usr/local/bin/firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}
+  register: _fkmvm_stat
+
+- name: grab the new version
+  include: install.yaml
+  when: not _fkmvm_stat.stat.exists

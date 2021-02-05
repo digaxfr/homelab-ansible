@@ -1,0 +1,44 @@
+---
+- block:
+  - name: make a temp directory
+    tempfile:
+      state: directory
+    register: _tempfile
+
+  - name: get the tarball
+    get_url:
+      url: '{{ fkmvm_release_url }}/download/{{ _fkmvm_latest_version }}/Firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
+      dest: '{{ _tempfile.path }}'
+
+  - name: unpack the tarball into temp
+    unarchive:
+      src: '{{ _tempfile.path }}/Firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
+      dest: '{{ _tempfile.path }}'
+      remote_src: yes
+
+  - name: move the binaries to /usr/local/bin
+    copy:
+      src: '{{ _tempfile.path }}/release-{{ _fkmvm_latest_version }}/{{ item }}'
+      dest: /usr/local/bin/{{ item }}
+      owner: root
+      group: root
+      mode: 0750
+      remote_src: yes
+    loop:
+    - firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}
+    - jailer-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}
+
+  - name: setup symlinks
+    file:
+      path: /usr/local/bin/{{ item }}
+      src: /usr/local/bin/{{ item }}-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}
+      state: link
+    loop:
+    - firecracker
+    - jailer
+
+  always:
+  - name: cleanup temp
+    file:
+      path: '{{ _tempfile.path }}'
+      state: absent
