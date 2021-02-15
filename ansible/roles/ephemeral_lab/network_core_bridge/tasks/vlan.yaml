@@ -1,0 +1,52 @@
+---
+- name: check if the vlan link exists
+  ansible.builtin.command: 'ip link show dev {{ el_core_bridge }}.{{ _network.vid }}'
+  changed_when: no
+  register: _get_vlan_iface
+  ignore_errors: yes
+
+- name: create vlan iface
+  ansible.builtin.command: >
+    ip link add link {{ el_core_bridge }} \
+    name {{ el_core_bridge }}.{{ _network.vid }} \
+    type vlan id {{ _network.vid }}
+  when: _get_vlan_iface.rc != 0
+
+- name: check to see if vlan exists in core bridge
+  ansible.builtin.command: 'bridge vlan show dev {{ el_core_bridge }} vid {{ _network.vid }}'
+  changed_when: no
+  register: _get_network_core_bridge_vid_exists
+
+- name: add vlan to core bridge
+  ansible.builtin.command: 'bridge vlan add dev {{ el_core_bridge }} vid {{ _network.vid }} self'
+  when: el_core_bridge not in _get_network_core_bridge_vid_exists.stdout
+
+- name: get current ip4 of vlan iface
+  ansible.builtin.command: 'ip address show dev {{ el_core_bridge }}.{{ _network.vid }}'
+  when: _network.ip4 is defined
+  register: _vlan_ip4
+
+- name: get current ip6 of vlan iface
+  ansible.builtin.command: 'ip -6 address show dev {{ el_core_bridge }}.{{ _network.vid }}'
+  when: _network.ip6 is defined
+  register: _vlan_ip6
+
+- name: add ip4 to vlan iface
+  ansible.builtin.command: >
+    ip address add {{ _network.ip4 | ansible.netcommon.ipaddr("1") }} \
+    dev {{ el_core_bridge }}.{{ _network.vid }}
+  when:
+  - _network.ip4 is defined
+  - ('inet ' + _network.ip4 | ansible.netcommon.ipaddr("1")) not in _vlan_ip4.stdout
+
+- name: add ip6 to vlan iface
+  ansible.builtin.command: >
+    ip address add {{ _network.ip6 | ansible.netcommon.ipaddr("1") }} \
+    dev {{ el_core_bridge }}.{{ _network.vid }}
+  when:
+  - _network.ip6 is defined
+  - ('inet6 ' + _network.ip6 | ansible.netcommon.ipaddr("1")) not in _vlan_ip6.stdout
+
+- name: set link state up (no-op)
+  ansible.builtin.command: 'ip link set {{ el_core_bridge }}.{{ _network.vid }} up'
+  changed_when: yes

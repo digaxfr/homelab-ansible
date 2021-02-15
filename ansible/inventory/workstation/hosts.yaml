@@ -3,6 +3,12 @@ all:
   hosts:
     ryzenfail.dchin.dev:
       ansible_connection: local
+      el_core_bridge: br-lab
+      el_networks:
+      - vid: 51
+        ip4: 100.64.0.0/24
+      - vid: 52
+        ip6: fd43:6412:3a55::/64
   children:
     fkmvm_hypervisor:
       hosts:

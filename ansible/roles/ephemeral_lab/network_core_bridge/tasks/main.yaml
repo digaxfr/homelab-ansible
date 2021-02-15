@@ -1,0 +1,39 @@
+---
+- name: enable ip forwarding
+  ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    state: present
+  loop:
+  - name: net.ipv4.conf.all.forwarding
+    value: 1
+  - name: net.ipv6.conf.all.forwarding
+    value: 1
+
+- name: check to see if the network core bridge exists
+  ansible.builtin.command: 'ip link show dev {{ el_core_bridge }}'
+  register: _get_network_core_bridge
+  changed_when: no
+  ignore_errors: yes
+
+- name: create the bridge
+  ansible.builtin.command: 'ip link add {{ el_core_bridge }} type bridge vlan_filtering 1'
+  when: _get_network_core_bridge.rc != 0
+
+- name: set link state up (no-op)
+  ansible.builtin.command: 'ip link set {{ el_core_bridge }} up'
+  changed_when: yes
+
+- name: check to see if the default vlan exists
+  ansible.builtin.command: 'bridge vlan show dev {{ el_core_bridge }} vid 1'
+  changed_when: no
+  register: _get_network_core_bridge_vlan1
+
+- name: delete the default vlan
+  ansible.builtin.command: 'bridge vlan del dev {{ el_core_bridge }} vid 1 self'
+  when: el_core_bridge in _get_network_core_bridge_vlan1.stdout
+
+- include: vlan.yaml
+  vars:
+    _network: '{{ item }}'
+  loop: '{{ el_networks }}'
