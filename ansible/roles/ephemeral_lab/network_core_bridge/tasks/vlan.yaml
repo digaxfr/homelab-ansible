@@ -47,6 +47,43 @@
   - _network.ip6 is defined
   - ('inet6 ' + _network.ip6 | ansible.netcommon.ipaddr("1")) not in _vlan_ip6.stdout
 
+- name: add ip4 firewall rules
+  ansible.builtin.iptables:
+    chain: '{{ item.chain }}'
+    source: '{{ item.source | default(omit) }}'
+    destination: '{{ item.destination | default(omit) }}'
+    jump: '{{ item.jump | default("ACCEPT") }}'
+    table: '{{ item.table | default(omit) }}'
+    ip_version: ipv4
+  loop:
+  - chain: FORWARD
+    source: '{{ _network.ip4 }}'
+  - chain: FORWARD
+    destination: '{{ _network.ip4 }}'
+  - chain: POSTROUTING
+    source: '{{ _network.ip4 }}'
+    jump: MASQUERADE
+    table: nat
+    out_interface: '{{ ansible_default_ipv4.interface }}'
+  when: _network.ip4 is defined
+
+- name: add ip4 firewall rules
+  ansible.builtin.iptables:
+    chain: '{{ item.chain }}'
+    source: '{{ item.source | default(omit) }}'
+    destination: '{{ item.destination | default(omit) }}'
+    jump: '{{ item.jump | default("ACCEPT") }}'
+    table: '{{ item.table | default(omit) }}'
+    ip_version: ipv6
+  loop:
+  - chain: FORWARD
+    source: '{{ _network.ip6 }}'
+  - chain: FORWARD
+    destination: '{{ _network.ip6 }}'
+  when: _network.ip6 is defined
+
 - name: set link state up (no-op)
   ansible.builtin.command: 'ip link set {{ el_core_bridge }}.{{ _network.vid }} up'
   changed_when: yes
+
+# TODO: Add in NAT64 gateway as the nested lab will not route ipv6 beyond the virtual bridge at this moment

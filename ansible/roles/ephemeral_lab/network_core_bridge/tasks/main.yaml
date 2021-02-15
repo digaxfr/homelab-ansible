@@ -35,5 +35,7 @@
 
 - include: vlan.yaml
   vars:
-    _network: '{{ item }}'
+    _network: '{{ _vlan_loop }}'
   loop: '{{ el_networks }}'
+  loop_control:
+    loop_var: _vlan_loop
