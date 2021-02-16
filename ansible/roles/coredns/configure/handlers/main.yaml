@@ -1,0 +1,5 @@
+---
+- name: reload systemd
+  ansible.builtin.systemd:
+    name: coredns.service
+    daemon_reload: yes

@@ -1,0 +1,25 @@
+---
+- name: ensure coredns directory exists
+  ansible.builtin.file:
+    path: /etc/coredns
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: template out coredns config
+  ansible.builtin.template:
+    src: Corefile.j2
+    dest: /etc/coredns/Corefile
+    owner: root
+    group: root
+    mode: 0644
+
+- name: template out systemd file
+  ansible.builtin.template:
+    src: coredns.service.j2
+    dest: /etc/systemd/system/coredns.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload systemd

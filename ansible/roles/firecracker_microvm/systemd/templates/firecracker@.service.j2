@@ -1,0 +1,28 @@
+# https://github.com/firecracker-microvm/firecracker/pull/2026/files
+# Design note: majority of logic is in Ansible. This systemd unit's sole job is to launch the jailer process. It
+# expects all the depdencies to be met externally (Ansible).
+# There is no elegant way of daemonizing a process through Ansible, so here we are at a systemd unit.
+[Unit]
+Description=Firecracker starting microvm %I
+After=network.target
+
+[Service]
+PrivateTmp=true
+Type=simple
+PIDFile={{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/%i/pid
+ExecStartPre=-/bin/rm {{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/%i/root/firecracker.socket
+ExecStartPre=-/bin/rm -rf {{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/%i/root/dev
+ExecStartPre=-/bin/rm -rf {{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/%i/root/run
+ExecStart={{ fkmvm_jailer_bin }} \
+    --id %i \
+    --exec-file {{ fkmvm_firecracker_bin }} \
+    --uid 65534 \
+    --gid 65534 \
+    --chroot-base-dir {{ fkmvm_dir }} \
+    --node 0 \
+    --netns /var/run/netns/%i \
+    -- \
+    --api-sock /firecracker.socket
+
+[Install]
+WantedBy=multi-user.target

@@ -3,14 +3,44 @@ all:
   hosts:
     ryzenfail.dchin.dev:
       ansible_connection: local
-      el_core_bridge: br-lab
-      el_networks:
+    test1.fkmvm.dchin.dev:
+      fkmvm_kernel_version: 5.10.13
+      fkmvm_rootfs: debian.rootfs.ext4
+      fkmvm_cpu: 1
+      fkmvm_id: '{{ (inventory_hostname | hash("sha256"))[0:10] }}'
+      fkmvm_mem: 2048
+      fkmvm_nics:
       - vid: 51
-        ip4: 100.64.0.0/24
+      fkmvm_disks:
+      - name: vda
+        size: 4
+    ip6-1.fkmvm.dchin.dev:
+      fkmvm_kernel_version: 5.10.13
+      fkmvm_rootfs: debian.rootfs.ext4
+      fkmvm_cpu: 1
+      fkmvm_id: '{{ (inventory_hostname | hash("sha256"))[0:10] }}'
+      fkmvm_mem: 2048
+      fkmvm_nics:
       - vid: 52
-        ip6: fd43:6412:3a55::/64
+      fkmvm_disks:
+      - name: vda
+        size: 4
   children:
+    coredns:
+      hosts:
+        ryzenfail.dchin.dev:
+    fkmvm:
+      children:
+        fkmvm_hypervisor:
+        fkmvm_vm:
     fkmvm_hypervisor:
+      hosts:
+        ryzenfail.dchin.dev:
+    fkmvm_vm:
+      hosts:
+        ip6-1.fkmvm.dchin.dev:
+        test1.fkmvm.dchin.dev:
+    nat64_gateways:
       hosts:
         ryzenfail.dchin.dev:
     workstation:

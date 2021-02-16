@@ -39,3 +39,23 @@
   loop: '{{ el_networks }}'
   loop_control:
     loop_var: _vlan_loop
+
+- name: check to see if our lab ip4 is associated with lo
+  ansible.builtin.command: 'ip address show dev lo'
+  changed_when: no
+  register: _lo4
+
+- name: check to see if our lab ip6 is associated with lo
+  ansible.builtin.command: 'ip -6 address show dev lo'
+  changed_when: no
+  register: _lo6
+
+- name: add ip4 to vlan iface
+  ansible.builtin.command: >
+    ip address add {{ fkmvm_core_network.ip4 | ansible.netcommon.ipaddr("1") }} dev lo
+  when: ('inet ' + fkmvm_core_network.ip4 | ansible.netcommon.ipaddr("1")) not in _lo4.stdout
+
+- name: add ip6 to vlan iface
+  ansible.builtin.command: >
+    ip address add {{ fkmvm_core_network.ip6 | ansible.netcommon.ipaddr("1") }} dev lo
+  when: ('inet6 ' + fkmvm_core_network.ip6 | ansible.netcommon.ipaddr("1")) not in _lo6.stdout

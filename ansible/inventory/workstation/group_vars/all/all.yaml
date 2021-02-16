@@ -1,3 +1,16 @@
 ---
+# Ansible
 ansible_python_interpreter: /usr/bin/python3
 ansible_user: darrenchin
+
+# Networking
+nat64_prefix: 64:ff9b::/96
+
+# CoreDNS
+coredns_release_url: https://github.com/coredns/coredns/releases
+coredns_dns_forwarders:
+- 1.1.1.1
+- 8.8.8.8
+
+# Jool
+jool_instance: fkmvm

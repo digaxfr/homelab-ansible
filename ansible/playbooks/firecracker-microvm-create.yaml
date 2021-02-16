@@ -1,0 +1,18 @@
+---
+- hosts: fkmvm_hypervisor
+  gather_facts: yes
+  become: yes
+  tasks:
+  - name: force gather facts
+    setup:
+
+- hosts: '{{ fkmvm_target_vm }}'
+  gather_facts: no
+  become: yes
+  serial: 1
+  vars:
+    _fkmvm_node: '{{ groups.fkmvm_hypervisor[0] }}'
+  roles:
+  - name: firecracker_microvm/create
+    delegate_to: '{{ _fkmvm_node }}'
+#    delegate_facts: yes

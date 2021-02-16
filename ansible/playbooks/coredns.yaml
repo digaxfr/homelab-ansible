@@ -1,0 +1,11 @@
+---
+- hosts: coredns
+  gather_facts: yes
+  become: yes
+  roles:
+  - role: coredns/install
+    tags:
+    - coredns_install
+  - role: coredns/configure
+    tags:
+    - coredns_configure

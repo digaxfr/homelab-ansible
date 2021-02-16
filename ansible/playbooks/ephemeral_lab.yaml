@@ -1,6 +1,0 @@
----
-- hosts: workstation
-  become: yes
-  gather_facts: yes
-  roles:
-  - ephemeral_lab/network_core_bridge

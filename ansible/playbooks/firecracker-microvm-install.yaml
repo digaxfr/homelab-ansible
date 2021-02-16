@@ -3,4 +3,9 @@
   gather_facts: yes
   become: yes
   roles:
-  - firecracker_microvm/install
+  - role: firecracker_microvm/install
+    tags:
+    - fkmvm_install
+  - role: firecracker_microvm//network_core_bridge
+    tags:
+    - fkmvm_network

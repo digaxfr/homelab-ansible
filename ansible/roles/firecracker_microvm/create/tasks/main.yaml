@@ -1,0 +1,161 @@
+---
+# This role is written to be used with delegate_to: fkmvm_hypervisor.
+
+# We can put an assert here that hte core bridge exists.
+# Apparently unix socket file name lenghts has a limit, so we will keep the ID shortned as well with the link names
+
+- name: get real path to firecracker bin
+  ansible.builtin.stat:
+    path: '{{ fkmvm_firecracker_bin }}'
+  register: _firecracker_bin_stat
+
+# Left here as a reminder, not using set_fact because to access it requires going through hostvars
+#- name: set temporary facts
+#  ansible.builtin.set_fact:
+#    _fkmvm_firecracker_bin: '{{ _firecracker_bin_stat.stat.lnk_source | basename }}'
+#
+#- debug:
+#    var: hostvars[_fkmvm_node]._fkmvm_firecracker_bin
+
+- name: create jail directory
+  ansible.builtin.file:
+    path: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root'
+    state: directory
+    owner: nobody
+    group: nobody
+
+- name: check to see if the kernel file exists
+  ansible.builtin.stat:
+    path: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/vmlinux-{{ fkmvm_kernel_version }}'
+  register: _kernel_stat
+
+- name: copy the kernel
+  ansible.builtin.copy:
+    src: '{{ fkmvm_dir }}/kernels/vmlinux-{{ fkmvm_kernel_version }}'
+    dest: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/vmlinux-{{ fkmvm_kernel_version }}'
+    remote_src: yes
+    owner: nobody
+    group: nobody
+  when: not _kernel_stat.stat.exists
+
+- name: check to see if the rootfs file exists
+  ansible.builtin.stat:
+    path: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/rootfs.ext4'
+  register: _rootfs_stat
+
+- name: copy the rootfs
+  ansible.builtin.copy:
+    src: '{{ fkmvm_dir }}/root-disks/{{ fkmvm_rootfs }}'
+    dest: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/rootfs.ext4'
+    remote_src: yes
+    owner: nobody
+    group: nobody
+  when: not _rootfs_stat.stat.exists
+
+# TODO: Add code here to enlarge disk size
+
+- name: ensure certain files/directories do not exist
+  ansible.builtin.file:
+    path: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/{{ item }}'
+    state: absent
+  loop:
+  - firecracker.socket
+  - dev
+  - run
+
+# Network code is written for one NIC for now. If there is a need for multiple NICs, I will deal with that later.
+# However, inventory will be written as an array of NICs, but code here will be hard coded to nic[0].
+# Why not use 'stat' module? Python/the module throws an OSError exception.
+- name: check to see if netns exists
+  ansible.builtin.command: >
+    ip netns list
+  register: _netns_stat
+  changed_when: no
+
+- name: create the netns
+  ansible.builtin.command: >
+    ip netns add {{ fkmvm_id }}
+#  when: fkmvm_id not in _netns_stat.stdout_lines
+  when: _netns_stat.stdout.find(fkmvm_id) == -1
+
+- name: check if tap0 exists
+  ansible.builtin.command: >
+    ip netns exec {{ fkmvm_id }} ip link show dev tap0
+  register: _netns_tap0
+  ignore_errors: yes
+  changed_when: no
+
+- name: create tap0
+  ansible.builtin.command: '{{ item }}'
+  when: _netns_tap0.rc != 0
+  loop:
+  - 'ip netns exec {{ fkmvm_id }} ip tuntap add tap0 mode tap'
+  - 'ip netns exec {{ fkmvm_id }} ip link set tap0 up'
+
+- name: check if veth-a exists
+  ansible.builtin.command: >
+    ip link show dev  {{ fkmvm_id }}-a
+  ignore_errors: yes
+  register: _veth_a
+  changed_when: no
+
+- name: create the veth pair
+  ansible.builtin.command: >
+    ip link add {{ fkmvm_id }}-a \
+    type veth \
+    peer name {{ fkmvm_id }}-b
+  register: _veth_created
+  when: _veth_a.rc != 0
+
+- name: join veth-a to the bridge
+  ansible.builtin.command: >
+    ip link set {{ fkmvm_id }}-a master {{ fkmvm_core_bridge }}
+  register: _veth_a_joined_to_bridge
+  when: _veth_created is changed
+
+- name: set vlan on the bridge port connected to veth-a
+  ansible.builtin.command: '{{ item }}'
+  when: _veth_a_joined_to_bridge is changed
+  loop:
+  - 'bridge vlan del dev {{ fkmvm_id }}-a vid 1'
+  - 'bridge vlan add dev {{ fkmvm_id }}-a vid {{ fkmvm_nics[0].vid }} untagged pvid'
+
+- name: send veth-b to netns
+  ansible.builtin.command: >
+    ip link set {{ fkmvm_id }}-b \
+    netns {{ fkmvm_id }}
+  when: _veth_created is changed
+
+- name: set veth pairs state up
+  ansible.builtin.command: '{{ item }}'
+  when: _veth_created is changed
+  loop:
+  - 'ip link set {{ fkmvm_id }}-a up'
+  - 'ip netns exec {{ fkmvm_id }} ip link set {{ fkmvm_id }}-b up'
+
+- name: create the integration bridge inside netns
+  ansible.builtin.command: '{{ item }}'
+  when: _veth_created is changed
+  loop:
+  - 'ip netns exec {{ fkmvm_id }} ip link add br-netns type bridge'
+  - 'ip netns exec {{ fkmvm_id }} ip link set br-netns up'
+  - >-
+      ip netns exec {{ fkmvm_id }}
+      ip link set {{ fkmvm_id }}-b master br-netns
+  - 'ip netns exec {{ fkmvm_id }} ip link set tap0 master br-netns'
+
+- name: template vm config
+  ansible.builtin.template:
+    src: vm_config.json.j2
+    dest: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ fkmvm_id }}/root/vm_config.json'
+    owner: root
+    group: root
+    mode: 0644
+
+- name: place a human readable name link
+  ansible.builtin.file:
+    path: '{{ fkmvm_dir }}/{{ _firecracker_bin_stat.stat.lnk_source | basename }}/{{ inventory_hostname }}'
+    src: '{{ fkmvm_id }}'
+    state: link
+    owner: root
+    group: root

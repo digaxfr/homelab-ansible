@@ -1,0 +1,27 @@
+---
+- name: check if coredns binary exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/coredns
+  register: _coredns_stat
+
+- name: get the version of coredns currently
+  ansible.builtin.command: >
+    /usr/local/bin/coredns -version
+  register: _coredns_version
+  when: _coredns_stat.stat.exists
+
+- name: get the latest version number
+  ansible.builtin.uri:
+    url: '{{ coredns_release_url }}/latest'
+  register: _coredns_latest_version_url
+
+- name: set fact for latest version
+  set_fact:
+    _coredns_latest_version: '{{ _coredns_latest_version_url.url | basename }}'
+    _coredns_latest_version_no_v: '{{ (_coredns_latest_version_url.url | basename)[1:] }}'
+
+- name: grab the new version
+  include: install.yaml
+  when: |
+    not _coredns_stat.stat.exists or
+    _coredns_latest_version_no_v not in _coredns_version.stdout

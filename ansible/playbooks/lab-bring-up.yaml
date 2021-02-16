@@ -1,0 +1,23 @@
+---
+- hosts: fkmvm_hypervisor
+  gather_facts: yes
+  become: yes
+  roles:
+  - role: firecracker_microvm/network_core_bridge
+    tags:
+    - fkmvm_network
+
+- import_playbook: jool-nat64.yaml
+
+- hosts: coredns
+  gather_facts: yes
+  become: yes
+  roles:
+  - role: coredns/configure
+    tags:
+    - coredns_configure
+  post_tasks:
+  - name: start coredns
+    ansible.builtin.systemd:
+      name: coredns.service
+      state: started

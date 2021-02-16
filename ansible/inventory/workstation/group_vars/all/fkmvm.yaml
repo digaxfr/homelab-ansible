@@ -1,0 +1,25 @@
+---
+fkmvm_base_image: rootfs.ext4
+fkmvm_core_bridge: br-lab
+fkmvm_dir: /home/darrenchin/fkmvm
+fkmvm_firecracker_bin: /usr/local/bin/firecracker
+fkmvm_jailer_bin: /usr/local/bin/jailer
+fkmvm_oui: 1a:b0:00
+fkmvm_release_url: https://github.com/firecracker-microvm/firecracker/releases
+
+# fkmvm ip settings for core services/host OS
+fkmvm_core_network:
+  ip4: 100.64.255.0/24
+  ip6: fd43:6412:3a55:b::/64
+
+fkmvm_networks:
+- vid: 51
+  description: "IPv4 only VM network - 1"
+  ip4: 100.64.0.0/24
+- vid: 52
+  description: "IPv6 only VM network - 1"
+  ip6: fd43:6412:3a55:a::/64
+
+# Legacy vars
+el_core_bridge: '{{ fkmvm_core_bridge }}'
+el_networks: '{{ fkmvm_networks }}'

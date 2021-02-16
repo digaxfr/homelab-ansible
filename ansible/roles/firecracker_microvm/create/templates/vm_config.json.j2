@@ -1,0 +1,26 @@
+{
+  "boot-source": {
+    "kernel_image_path": "vmlinux-{{ fkmvm_kernel_version }}",
+    "boot_args": "console=ttyS0 reboot=k panic=1 pci=off"
+  },
+  "drives": [
+    {
+      "drive_id": "rootfs",
+      "path_on_host": "rootfs.ext4",
+      "is_root_device": true,
+      "is_read_only": false
+    }
+  ],
+  "machine-config": {
+    "vcpu_count": {{ fkmvm_cpu }},
+    "mem_size_mib": {{ fkmvm_mem }},
+    "ht_enabled": false
+  },
+  "network-interfaces": [
+    {
+      "iface_id": "eth0",
+      "guest_mac": "{{ fkmvm_oui}}:{{ (inventory_hostname | hash("sha256"))[0:2] }}:{{ (inventory_hostname | hash("sha256"))[2:4] }}:{{ (inventory_hostname | hash("sha256"))[4:6] }}",
+      "host_dev_name": "tap0"
+    }
+  ]
+}

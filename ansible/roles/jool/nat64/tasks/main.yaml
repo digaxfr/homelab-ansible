@@ -1,0 +1,27 @@
+---
+- name: ensure ip forwarding is enabled
+  ansible.posix.sysctl:
+    name: '{{ item.name }}'
+    value: '{{ item.value }}'
+    state: present
+  loop:
+  - name: net.ipv4.conf.all.forwarding
+    value: 1
+  - name: net.ipv6.conf.all.forwarding
+    value: 1
+
+- name: load the jool module
+  community.general.modprobe:
+    name: jool
+    state: present
+
+- name: check if jool instance exists already
+  ansible.builtin.command: >
+    /usr/local/bin/jool --instance {{ jool_instance }} instance status
+  register: _jool_status
+  changed_when: no
+
+- name: create jool instance
+  ansible.builtin.command: >
+    /usr/local/bin/jool instance add {{ jool_instance }} --netfilter --pool6 {{ nat64_prefix }}
+  when: "'Running' not in _jool_status.stdout"

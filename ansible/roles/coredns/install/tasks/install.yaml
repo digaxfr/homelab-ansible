@@ -1,0 +1,24 @@
+---
+- block:
+  - name: make a temp directory
+    tempfile:
+      state: directory
+    register: _tempfile
+
+# e.g. https://github.com/coredns/coredns/releases/download/v1.8.3/coredns_1.8.3_linux_amd64.tgz
+  - name: get the tarball
+    get_url:
+      url: '{{ coredns_release_url }}/download/{{ _coredns_latest_version }}/coredns_{{ _coredns_latest_version_no_v }}_linux_amd64.tgz'
+      dest: '{{ _tempfile.path }}'
+
+  - name: unpack the tarball into temp
+    unarchive:
+      src: '{{ _tempfile.path }}/coredns_{{ _coredns_latest_version_no_v }}_linux_amd64.tgz'
+      dest: '/usr/local/bin/'
+      remote_src: yes
+
+  always:
+  - name: cleanup temp
+    file:
+      path: '{{ _tempfile.path }}'
+      state: absent

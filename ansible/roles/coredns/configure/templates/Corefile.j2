@@ -1,0 +1,27 @@
+(bindings) {
+    bind 100.64.255.1
+    bind fd43:6412:3a55:b::1
+}
+
+(defaults) {
+    log
+    errors
+    cache
+    import bindings
+}
+
+. {
+    dns64 {
+        prefix {{ nat64_prefix }}
+        translate_all
+    }
+    forward . {{ coredns_dns_forwarders | join(' ') }}
+    import defaults
+}
+
+fkmvm.dchin.dev {
+    hosts fkmvm.dchin.dev.hosts fkmvm.dchin.dev {
+        ttl 60
+    }
+    import defaults
+}

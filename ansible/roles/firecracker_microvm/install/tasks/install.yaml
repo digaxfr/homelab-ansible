@@ -7,12 +7,12 @@
 
   - name: get the tarball
     get_url:
-      url: '{{ fkmvm_release_url }}/download/{{ _fkmvm_latest_version }}/Firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
+      url: '{{ fkmvm_release_url }}/download/{{ _fkmvm_latest_version }}/firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
       dest: '{{ _tempfile.path }}'
 
   - name: unpack the tarball into temp
     unarchive:
-      src: '{{ _tempfile.path }}/Firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
+      src: '{{ _tempfile.path }}/firecracker-{{ _fkmvm_latest_version }}-{{ ansible_architecture }}.tgz'
       dest: '{{ _tempfile.path }}'
       remote_src: yes
 

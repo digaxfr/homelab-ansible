@@ -1,0 +1,6 @@
+---
+- hosts: nat64_gateways
+  gather_facts: yes
+  become: yes
+  roles:
+  - jool/nat64
